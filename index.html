@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<!-- 
+POWERED BY B6W-HOST
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>DNS Host</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --accent:#00ff88;--accent2:#00c8ff;--orange:#ff6644;--warn:#ffaa00;--warn2:#ff6600;
+  --danger:#ff2d55;--bg:#050508;
+  --glass:rgba(255,255,255,.04);--glass-border:rgba(255,255,255,.08);
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --r:20px;--r-s:14px;
+}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 600px 600px at 20% 10%,rgba(0,255,136,.06),transparent),radial-gradient(ellipse 500px 500px at 80% 90%,rgba(0,200,255,.05),transparent),radial-gradient(ellipse 400px 400px at 50% 50%,rgba(0,100,255,.03),transparent)}
+.bg-noise{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.015;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+.top-bar{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,8,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);position:sticky;top:0;z-index:100}
+.top-left{display:flex;align-items:center;gap:12px}
+.logo-box{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,rgba(0,255,136,.12),rgba(0,200,255,.12));border:1px solid rgba(0,255,136,.18);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--accent)}
+.logo-text{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#fff}
+.top-right{display:flex;align-items:center;gap:6px}
+.top-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:all .5s}
+.top-dot.live{background:var(--accent);box-shadow:0 0 12px rgba(0,255,136,.5)}
+.top-status-text{font-size:11px;font-weight:500;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;transition:color .5s}
+.main{flex:1;padding:20px 16px 40px;max-width:480px;margin:0 auto;width:100%}
+
+.hero{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);padding:32px 20px;margin-bottom:16px;position:relative;overflow:hidden;transition:all .6s;backdrop-filter:blur(10px)}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.hero.running{border-color:rgba(0,255,136,.15);box-shadow:0 0 60px rgba(0,255,136,.05),inset 0 0 60px rgba(0,255,136,.02)}
+.hero-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.hero-icon{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);transition:all .6s}
+.hero.running .hero-icon{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.2);color:var(--accent);box-shadow:0 0 30px rgba(0,255,136,.1)}
+.hero-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:1px}
+.hero-sub{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:2px;margin-top:2px;transition:color .5s}
+.hero.running .hero-sub{color:var(--accent)}
+.hero-center{display:flex;align-items:center;justify-content:center;gap:36px}
+.hero-big-num{font-family:'Orbitron',sans-serif;font-size:56px;font-weight:900;background:linear-gradient(135deg,#fff,rgba(255,255,255,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.hero-big-unit{font-size:13px;color:var(--text3);margin-left:-16px;margin-bottom:4px;font-weight:500}
+.hero-divider{width:1px;height:56px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.1),transparent)}
+.hero-right-info{text-align:right}
+.hero-time{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:rgba(255,255,255,.15);transition:color .6s}
+.hero.running .hero-time{color:var(--accent)}
+.hero-time-label{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:1px}
+.progress-wrap{margin-top:24px}
+.progress-bar-bg{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.04);overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .8s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(0,255,136,.3)}
+.progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:6px;letter-spacing:1px}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-s);padding:16px 12px;text-align:center;position:relative;overflow:hidden;transition:all .5s}
+.stat::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:44px;height:1px;background:rgba(255,255,255,.06);transition:all .5s}
+.stat.active{border-color:rgba(0,255,136,.1)}
+.stat.active::before{width:56px}
+.stat-icon{font-size:16px;margin-bottom:6px;transition:color .5s;color:var(--text3)}
+.stat.active .stat-icon{color:var(--accent)}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#fff;margin-bottom:2px}
+.stat-lbl{font-size:10px;color:var(--text3);letter-spacing:1px}
+.stat.ipv4.active::before{background:var(--accent);box-shadow:0 0 10px rgba(0,255,136,.3)}
+.stat.ipv4.active .stat-icon{color:var(--accent)}
+.stat.ipv4 .stat-val{color:var(--accent)}
+.stat.ipv6.active{border-color:rgba(255,102,68,.12)}
+.stat.ipv6.active::before{background:var(--orange);box-shadow:0 0 10px rgba(255,102,68,.3)}
+.stat.ipv6.active .stat-icon{color:var(--orange)}
+.stat.ipv6 .stat-val{color:var(--orange)}
+
+.power-section{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden;transition:all .5s}
+.power-section::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+.power-section.running{border-color:rgba(0,255,136,.1)}
+.power-switch{width:110px;height:110px;margin:0 auto 14px;border-radius:50%;border:2px solid rgba(255,255,255,.08);background:transparent;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;position:relative;transition:all .6s cubic-bezier(.4,0,.2,1)}
+.power-switch:hover{border-color:rgba(255,255,255,.15)}
+.power-switch.running{border-color:rgba(0,255,136,.3);box-shadow:0 0 40px rgba(0,255,136,.15),inset 0 0 30px rgba(0,255,136,.05)}
+.power-inner{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;transition:all .6s}
+.power-switch.running .power-inner{background:rgba(0,255,136,.08)}
+.power-inner i{font-size:32px;color:var(--text3);transition:all .6s}
+.power-switch.running .power-inner i{color:var(--accent);filter:drop-shadow(0 0 10px rgba(0,255,136,.5))}
+.power-label{font-size:13px;color:var(--text2);font-weight:500;letter-spacing:2px;transition:color .5s}
+.power-section.running .power-label{color:var(--accent)}
+
+.capture-btn,.rulegen-btn{width:100%;border:none;border-radius:var(--r-s);padding:14px 20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .3s;position:relative;overflow:hidden}
+.capture-btn.start{background:linear-gradient(135deg,#00ff88,#00aaff);color:#000;box-shadow:0 4px 20px rgba(0,255,136,.15);margin-bottom:12px}
+.capture-btn.start:hover{box-shadow:0 6px 28px rgba(0,255,136,.25)}
+.capture-btn.stop{background:linear-gradient(135deg,#ff4444,#ff6644);color:#fff;box-shadow:0 4px 20px rgba(255,68,68,.15);margin-bottom:12px}
+.capture-btn.stop:hover{box-shadow:0 6px 28px rgba(255,68,68,.25)}
+.capture-btn:active,.rulegen-btn:active{transform:scale(.98)}
+.capture-btn i,.rulegen-btn i{font-size:18px}
+.rulegen-btn{background:linear-gradient(135deg,rgba(0,255,136,.08),rgba(0,200,255,.08));color:var(--accent);border:1px solid rgba(0,255,136,.15);box-shadow:0 4px 20px rgba(0,255,136,.06);margin-bottom:16px}
+.rulegen-btn:hover{border-color:rgba(0,255,136,.3);box-shadow:0 6px 28px rgba(0,255,136,.12);background:linear-gradient(135deg,rgba(0,255,136,.12),rgba(0,200,255,.12))}
+
+.capture-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .25s ease}
+.capture-box{width:100%;max-width:380px;max-height:82vh;background:rgba(12,12,22,.97);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:24px 20px;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:modalIn .35s cubic-bezier(.22,1,.36,1)}
+.capture-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.capture-head i{font-size:20px;color:var(--accent)}
+.capture-head span{font-size:16px;font-weight:700;color:#fff}
+.capture-search-wrap{position:relative;margin-bottom:12px}
+.capture-search-wrap>i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--text3);z-index:2}
+.capture-search{width:100%;height:42px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 14px 0 38px;font-size:13px;font-family:inherit;color:var(--text);outline:none;transition:border-color .2s}
+.capture-search:focus{border-color:rgba(0,255,136,.3)}
+.capture-list{flex:1;overflow-y:auto;max-height:46vh;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.06) transparent}
+.capture-list::-webkit-scrollbar{width:2px}
+.capture-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:2px}
+.capture-item{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;transition:background .2s;border-radius:8px;margin-bottom:2px}
+.capture-item:hover{background:rgba(0,255,136,.04)}
+.capture-item:active{background:rgba(0,255,136,.08)}
+.capture-item-name{font-size:13px;font-weight:600;color:var(--text)}
+.capture-item-pkg{font-size:10px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.capture-empty{text-align:center;padding:28px;color:var(--text3);font-size:12px}
+.capture-empty i{font-size:24px;display:block;margin-bottom:8px;opacity:.3}
+.capture-cancel{width:100%;height:42px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--text3);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;outline:none;margin-top:12px;transition:all .2s}
+.capture-cancel:hover{background:rgba(255,255,255,.05);color:var(--text2)}
+
+.log-section{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.log-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04)}
+.log-header-left{display:flex;align-items:center;gap:8px}
+.log-header-left i{font-size:14px;color:var(--accent);opacity:.5;transition:opacity .5s}
+.log-section.running .log-header-left i{opacity:1}
+.log-header-left span{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:1px}
+.log-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.04);color:var(--text3);font-family:'JetBrains Mono',monospace;transition:all .5s}
+.log-section.running .log-badge{background:rgba(0,255,136,.08);color:var(--accent)}
+.log-body{padding:4px 0;max-height:170px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.06) transparent}
+.log-body::-webkit-scrollbar{width:2px}
+.log-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:2px}
+.log-empty{padding:28px;text-align:center;color:var(--text3);font-size:12px}
+.log-empty i{font-size:26px;display:block;margin-bottom:8px;opacity:.3}
+.log-line{padding:5px 16px;display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;border-bottom:1px solid rgba(255,255,255,.015);animation:logIn .3s ease}
+@keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.log-line .log-time{color:var(--text3);flex-shrink:0;letter-spacing:.5px}
+.log-line .log-icon{font-size:12px;color:var(--accent);flex-shrink:0}
+.log-line .log-msg{color:rgba(255,255,255,.45)}
+
+.guard-row{text-align:center;padding:20px 0 4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.guard-row i{font-size:14px;color:var(--accent);opacity:.45}
+.guard-text{font-size:12px;color:var(--text3);letter-spacing:1px}
+.guard-text .g-num{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(0,255,136,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 1px}
+.guard-text .g-unit{font-size:11px;color:var(--text3);margin-right:4px}
+.guard-since{font-size:10px;color:rgba(255,255,255,.1);text-align:center;margin-top:2px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+
+.modal-mask{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{width:100%;max-width:340px;background:rgba(15,15,25,.95);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:28px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:modalIn .35s cubic-bezier(.22,1,.36,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.modal-head-icon{width:42px;height:42px;border-radius:12px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
+.modal-title{font-size:16px;font-weight:700;color:#fff}
+.modal-desc{font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:20px}
+.modal-restore{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.modal-restore-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.modal-restore-label{font-size:12px;color:var(--text2)}
+.modal-restore-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent)}
+.modal-btns{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.modal-btn{width:100%;height:44px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:none;outline:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
+.modal-btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;box-shadow:0 4px 20px rgba(0,255,136,.2)}
+.modal-btn-primary:hover{box-shadow:0 6px 28px rgba(0,255,136,.3)}
+.modal-btn-primary:active{transform:scale(.97)}
+.modal-btn-ghost{background:rgba(255,255,255,.04);color:var(--text2);border:1px solid rgba(255,255,255,.08)}
+.modal-btn-ghost:hover{background:rgba(255,255,255,.06);color:#fff}
+.modal-btn-ghost:active{transform:scale(.97)}
+.ripple{position:absolute;border-radius:50%;background:rgba(0,255,136,.2);transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(5);opacity:0}}
+.app-footer{text-align:center;padding:16px;font-size:10px;color:rgba(255,255,255,.1);letter-spacing:3px;font-family:'JetBrains Mono',monospace}
+.lang-switcher{display:flex;align-items:center;gap:4px;margin-left:8px}
+.lang-btn{height:26px;padding:0 8px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:.5px;white-space:nowrap}
+.lang-btn:hover{background:rgba(255,255,255,.06);color:var(--text2)}
+.lang-btn.active{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25);color:var(--accent)}
+
+/* 更新弹窗 */
+.update-head-icon{width:42px;height:42px;border-radius:12px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent2)}
+.update-version-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.12);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:14px}
+.update-content-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.08);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.7}
+
+/* 规则生成器弹窗样式 */
+.rulegen-box { background:#0a0a0f; border:1px solid #1a1a2e; border-radius:12px; padding:20px; max-width:520px; margin:10px auto; max-height:90vh; overflow-y:auto; position:relative; }
+.rulegen-title-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.rulegen-title-left { display:flex; align-items:center; gap:10px; }
+.rulegen-title-icon { width:36px; height:36px; border-radius:10px; background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.18); display:flex; align-items:center; justify-content:center; }
+.rulegen-title-text { color:#00ff88; font-size:18px; font-weight:bold; }
+.rulegen-close-btn { width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.rulegen-label-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.rulegen-label-icon { font-size:13px; color:#00ff88; opacity:0.5; }
+.rulegen-label-text { color:#888; font-size:12px; font-weight:600; letter-spacing:0.5px; }
+
+.source-btn-row { display:flex; gap:8px; margin-bottom:8px; }
+.source-btn { flex:1; height:40px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.source-btn-import { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); color:#e0e0e0; }
+.source-btn-file { background:rgba(0,255,136,0.06); border:1px solid rgba(0,255,136,0.15); color:#00ff88; }
+.path-input-row { display:flex; gap:6px; margin-bottom:4px; }
+.rulegen-input { flex:1; height:38px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#e0e0e0; padding:0 12px; font-size:12px; outline:none; }
+.path-read-btn { width:56px; height:38px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#aaa; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; }
+
+.rulegen-textarea { width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#e0e0e0; padding:10px 12px; font-size:12px; outline:none; resize:vertical; margin-bottom:8px; box-sizing:border-box; font-family:'JetBrains Mono',monospace; line-height:1.7; }
+.smart-parse-btn { height:34px; border-radius:8px; padding:0 16px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,170,0,0.15); background:rgba(255,170,0,0.06); color:#ffaa00; display:inline-flex; align-items:center; gap:5px; margin-bottom:16px; }
+
+.fmt-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
+.fmt-btn { padding:8px 4px; text-align:center; font-size:11px; font-weight:600; border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#555; transition:all 0.2s; }
+.fmt-btn.active { background:rgba(0,255,136,0.06); border-color:rgba(0,255,136,0.2); color:#00ff88; box-shadow:0 0 16px rgba(0,255,136,0.06); }
+.fmt-btn.active i { opacity: 1 !important; }
+
+.fmt-detail-card { background:#050508; border:1px solid #1a1a2e; border-radius:8px; padding:12px; margin-bottom:12px; font-size:11px; color:#888; line-height:1.7; font-family:monospace; }
+.sysrules-btn { height:34px; border-radius:8px; padding:0 14px; font-size:11px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; border:1px solid rgba(0,255,136,0.15); background:rgba(0,255,136,0.04); color:#00ff88; }
+.sysrules-panel { margin-top:10px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.04); border-radius:10px; padding:12px; }
+
+.generate-rules-btn { width:100%; height:44px; border:none; border-radius:12px; background:linear-gradient(135deg, #00ff88, #00aaff); color:#000; font-size:14px; font-weight:bold; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 20px rgba(0,255,136,0.15); }
+.rule-preview-box { background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:12px; max-height:200px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(255,255,255,0.55); white-space:pre-wrap; line-height:1.7; margin-bottom:14px; }
+.export-row { display:flex; gap:8px; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="bg-noise"></div>
+
+<div id="app">
+  <header class="top-bar">
+    <div class="top-left">
+      <div class="logo-box"><i class="ri-shield-check-line"></i></div>
+      <span class="logo-text">DNS</span>
+    </div>
+    <div class="top-right">
+      <div class="top-dot" :class="{live:running}"></div>
+      <span class="top-status-text">{{ running?t('online'):t('offline') }}</span>
+      <div class="lang-switcher">
+        <button class="lang-btn" :class="{active:lang==='zh'}" @click="setLang('zh')">中</button>
+        <button class="lang-btn" :class="{active:lang==='en'}" @click="setLang('en')">EN</button>
+        <button class="lang-btn" :class="{active:lang==='ru'}" @click="setLang('ru')">RU</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="hero" :class="{running}">
+      <div class="hero-head">
+        <div class="hero-icon"><i :class="running?'ri-shield-check-fill':'ri-shield-line'"></i></div>
+        <div>
+          <div class="hero-title">{{ t('dnsBlock') }}</div>
+          <div class="hero-sub">{{ running?t('systemRunning'):t('systemIdle') }}</div>
+        </div>
+      </div>
+      <div class="hero-center">
+        <div>
+          <span class="hero-big-num">{{ formatNum(blockedCount) }}</span>
+          <span class="hero-big-unit">{{ t('blocked') }}</span>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-right-info">
+          <div class="hero-time">{{ uptime }}</div>
+          <div class="hero-time-label">{{ t('uptime') }}</div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{width:progressPct+'%'}"></div></div>
+        <div class="progress-label"><span>{{ t('load') }}</span><span>{{ progressPct }}%</span></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat" :class="{active:running}">
+        <i class="ri-database-2-line stat-icon"></i>
+        <div class="stat-val">{{ formatNum(ruleCount) }}</div>
+        <div class="stat-lbl">{{ t('filterRules') }}</div>
+      </div>
+      <div class="stat" :class="{active:running}">
+        <i class="ri-time-line stat-icon"></i>
+        <div class="stat-val">{{ uptime }}</div>
+        <div class="stat-lbl">{{ t('uptime') }}</div>
+      </div>
+      <div class="stat ipv4" :class="{active:running}">
+        <i class="ri-global-line stat-icon"></i>
+        <div class="stat-val">{{ formatNum(blockedV4) }}</div>
+        <div class="stat-lbl">{{ t('ipv4Block') }}</div>
+      </div>
+      <div class="stat ipv6" :class="{active:running}">
+        <i class="ri-global-fill stat-icon"></i>
+        <div class="stat-val">{{ formatNum(blockedV6) }}</div>
+        <div class="stat-lbl">{{ t('ipv6Block') }}</div>
+      </div>
+    </div>
+
+    <div class="power-section" :class="{running}">
+      <button class="power-switch" :class="{running}" @click="toggle" ref="powerBtn">
+        <div class="power-inner"><i :class="running?'ri-stop-fill':'ri-play-fill'"></i></div>
+      </button>
+      <div class="power-label">{{ running?t('clickStop'):t('clickStart') }}</div>
+    </div>
+
+    <button class="capture-btn" :class="isCapturing?'stop':'start'" @click="handleCapture">
+      <i :class="isCapturing?'ri-stop-circle-line':'ri-radar-line'"></i>
+      {{ isCapturing?t('stopCapture'):t('domainCapture') }}
+    </button>
+
+    <button class="rulegen-btn" @click="showRuleGen = true">
+      <i class="ri-braces-line"></i>
+      {{ t('ruleGeneratorTitle') }}
+    </button>
+
+    <div class="log-section" :class="{running}">
+      <div class="log-header">
+        <div class="log-header-left"><i class="ri-terminal-line"></i><span>{{ t('activityLog') }}</span></div>
+        <span class="log-badge">{{ logs.length }}</span>
+      </div>
+      <div class="log-body" ref="logBody">
+        <template v-if="logs.length">
+          <div class="log-line" v-for="(l,i) in logs" :key="i">
+            <span class="log-time">{{ l.time }}</span>
+            <i class="ri-checkbox-circle-line log-icon"></i>
+            <span class="log-msg">{{ l.msg }}</span>
+          </div>
+        </template>
+        <div class="log-empty" v-else><i class="ri-terminal-box-line"></i>{{ t('waitingStart') }}</div>
+      </div>
+    </div>
+
+    <div class="guard-row"><i class="ri-shield-star-line"></i><span class="guard-text" v-html="guardDisplay"></span></div>
+    <div class="guard-since" v-if="guardSince">{{ t('since') }} {{ guardSince }}</div>
+  </div>
+
+  <!-- 捕获弹窗 -->
+  <div class="capture-modal" v-if="showCapture" @click.self="closeCaptureModal">
+    <div class="capture-box">
+      <div class="capture-head"><i class="ri-radar-line"></i><span>{{ t('selectApp') }}</span></div>
+      <div class="capture-search-wrap">
+        <i class="ri-search-line"></i>
+        <input class="capture-search" type="text" :placeholder="t('searchApp')" v-model="captureKeyword" @input="filterApps">
+      </div>
+      <div class="capture-list">
+        <template v-if="filteredApps.length">
+          <div class="capture-item" v-for="(app,i) in filteredApps" :key="i" @click="selectCapture(app)">
+            <div class="capture-item-name">{{ app.name }}</div>
+            <div class="capture-item-pkg">{{ app.package }}</div>
+          </div>
+        </template>
+        <div class="capture-empty" v-else><i class="ri-apps-line"></i>{{ t('noApps') }}</div>
+      </div>
+      <button class="capture-cancel" @click="closeCaptureModal">{{ t('cancel') }}</button>
+    </div>
+  </div>
+
+  <!-- 恢复弹窗 -->
+  <div class="modal-mask" v-if="showModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-head-icon"><i class="ri-history-line"></i></div>
+        <div class="modal-title">{{ t('prevRecordFound') }}</div>
+      </div>
+      <div class="modal-desc">{{ t('prevRecordDesc') }}</div>
+      <div class="modal-restore">
+        <div class="modal-restore-row">
+          <span class="modal-restore-label"><i class="ri-forbid-2-line"></i> {{ t('totalBlocked') }}</span>
+          <span class="modal-restore-val">{{ savedBlocked.toLocaleString() }}</span>
+        </div>
+        <div class="modal-restore-row">
+          <span class="modal-restore-label"><i class="ri-time-line"></i> {{ t('totalTime') }}</span>
+          <span class="modal-restore-val">{{ formatSavedTime(savedElapsed) }}</span>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-primary" @click="resume"><i class="ri-play-circle-line"></i> {{ t('continue') }}</button>
+        <button class="modal-btn modal-btn-ghost" @click="fresh"><i class="ri-restart-line"></i> {{ t('restart') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 更新弹窗 -->
+  <div class="modal-mask" v-if="showUpdate">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="update-head-icon"><i class="ri-download-cloud-2-line"></i></div>
+        <div class="modal-title">{{ t('newVersion') }}</div>
+      </div>
+      <div class="update-version-badge">
+        <i class="ri-arrow-up-circle-line"></i>
+        v{{ updateInfo.version }}
+      </div>
+      <div class="update-content-box">
+        <div style="color:var(--accent2);font-size:11px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+          <i class="ri-file-text-line" style="font-size:13px;"></i> {{ t('updateContent') }}
+        </div>
+        {{ updateInfo.content }}
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-primary" @click="openUpdateLink"><i class="ri-download-2-line"></i> {{ t('updateNow') }}</button>
+        <button class="modal-btn modal-btn-ghost" @click="showUpdate=false"><i class="ri-close-line"></i> {{ t('later') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rule Generator Modal -->
+  <div class="modal-mask" style="z-index:9999;" v-show="showRuleGen" @click.self="showRuleGen = false">
+    <div class="rulegen-box">
+      <div class="rulegen-title-row">
+        <div class="rulegen-title-left">
+          <div class="rulegen-title-icon">
+            <i class="ri-braces-line" style="font-size:17px; color:#00ff88;"></i>
+          </div>
+          <span class="rulegen-title-text">{{ t('ruleGeneratorTitle') }}</span>
+        </div>
+        <div class="rulegen-close-btn" @click="showRuleGen = false">
+          <i class="ri-close-line" style="font-size:16px; color:#888;"></i>
+        </div>
+      </div>
+
+      <div class="rulegen-label-row">
+        <i class="ri-database-2-line rulegen-label-icon"></i>
+        <span class="rulegen-label-text">{{ t('dataSource') }}</span>
+      </div>
+      
+      <div class="source-btn-row">
+        <button class="source-btn source-btn-import" @click="loadFromCapture">
+          <i class="ri-radar-line" style="font-size:15px; color:#00ff88;"></i> {{ t('importFromCapture') }}
+        </button>
+        <button class="source-btn source-btn-file" @click="pickFile">
+          <i class="ri-folder-open-line" style="font-size:15px;"></i> {{ t('selectFile') }}
+        </button>
+      </div>
+      <div class="path-input-row">
+        <input class="rulegen-input" type="text" :placeholder="t('inputFilePath')" v-model="ruleFilePath">
+        <button class="path-read-btn" @click="loadFromPath">
+          <i class="ri-file-3-line" style="font-size:13px;"></i> {{ t('readBtn') }}
+        </button>
+      </div>
+      <div style="color:#555; font-size:11px; margin-bottom:14px; min-height:16px;" v-html="ruleSourceInfoHtml"></div>
+
+      <div class="rulegen-label-row">
+        <i class="ri-edit-2-line rulegen-label-icon"></i>
+        <span class="rulegen-label-text">{{ t('manualInput') }}</span>
+      </div>
+      <textarea class="rulegen-textarea" rows="3" :placeholder="t('pasteRules')" v-model="ruleManualInput"></textarea>
+      <button class="smart-parse-btn" @click="parseManualInput">
+        <i class="ri-magic-line" style="font-size:14px;"></i> {{ t('smartParse') }}
+      </button>
+
+      <div class="rulegen-label-row">
+        <i class="ri-layout-grid-line rulegen-label-icon"></i>
+        <span class="rulegen-label-text">{{ t('ruleFormatTitle') }}</span>
+      </div>
+      
+      <div class="fmt-grid">
+        <div class="fmt-btn" v-for="f in availableFmts" :key="f.key" :class="{active: ruleFormat === f.key}" @click="selectFmt(f.key)">
+          <i :class="f.icon" style="font-size:14px;display:block;margin-bottom:3px;opacity:0.5;"></i>{{ t(f.labelKey) }}
+        </div>
+      </div>
+      
+      <div class="fmt-detail-card" v-if="currentFmtDesc">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i :class="currentFmtDef.icon" style="font-size:16px;color:#00ff88;"></i>
+          </div>
+          <div>
+            <div style="color:#00ff88;font-size:13px;font-weight:bold;">{{ t(currentFmtDesc.titleKey) }}</div>
+            <div style="color:#888;font-size:11px;margin-top:2px;">{{ t(currentFmtDesc.descKey) }}</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:10px;">
+          <div style="color:#555;font-size:10px;margin-bottom:5px;display:flex;align-items:center;gap:4px;">
+            <i class="ri-code-line" style="font-size:11px;opacity:0.5;"></i> {{ t('exampleOutput') }}
+          </div>
+          <div style="color:#aaa;" v-for="(line, idx) in currentFmtDesc.example.split('\n')" :key="idx">{{ line }}</div>
+        </div>
+        <div style="color:#555;font-size:10px;display:flex;align-items:center;gap:4px;">
+           <i class="ri-lightbulb-line" style="font-size:12px;color:#ffaa00;opacity:0.6;"></i> {{ t(currentFmtDesc.tipKey) }}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;" v-if="currentFmtDesc && currentFmtDesc.hasHost">
+        <span style="color:#666; font-size:12px; display:flex; align-items:center; gap:4px;">
+          <i class="ri-server-line" style="font-size:13px; opacity:0.5;"></i>{{ t('hostPrefix') }}
+        </span>
+        <input class="rulegen-input" type="text" v-model="ruleHostPrefix">
+      </div>
+
+      <div style="margin-bottom:12px;" v-if="currentFmtDesc && currentFmtDesc.hasCustom">
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:14px;">
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+            <span style="color:#555; font-size:11px; min-width:32px; display:flex; align-items:center; gap:3px;">
+              <i class="ri-arrow-right-s-line" style="opacity:0.4;"></i> {{ t('prefixStart') }}
+            </span>
+            <input type="text" :placeholder="t('contentBeforeDomain')" class="rulegen-input" style="height:36px;border-radius:8px;padding:0 10px;" v-model="ruleCustomHead">
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+            <span style="color:#555; font-size:11px; min-width:32px; display:flex; align-items:center; gap:3px;">
+              <i class="ri-arrow-left-s-line" style="opacity:0.4;"></i> {{ t('suffixEnd') }}
+            </span>
+            <input type="text" :placeholder="t('contentAfterDomain')" class="rulegen-input" style="height:36px;border-radius:8px;padding:0 10px;" v-model="ruleCustomTail">
+          </div>
+          <div style="color:#444; font-size:10px; line-height:1.6;">
+            {{ t('exampleStart') }} <code style="font-family:monospace; color:#00ff88; opacity:0.6; background:rgba(0,255,136,0.04); padding:1px 5px; border-radius:4px;">0.0.0.0 </code> {{ t('exampleEndEmpty') }} <code style="font-family:monospace; color:#888;">0.0.0.0 example.com</code>
+          </div>
+          <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+            <button class="sysrules-btn" @click="showSysRules = !showSysRules" :style="showSysRules ? 'background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);box-shadow:0 0 12px rgba(0,255,136,0.06);' : ''">
+              <i class="ri-book-open-line" style="font-size:13px;"></i> {{ t('sysHostRules') }}
+            </button>
+          </div>
+          <div class="sysrules-panel" v-show="showSysRules">
+             <!-- Sys host blocks -->
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#555; font-size:10px; min-width:42px;">{{ t('intercept') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">0.0.0.0 example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#555; font-size:10px; min-width:42px;">{{ t('intercept') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">127.0.0.1 example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#ff6644; font-size:10px; min-width:42px;">{{ t('v6Intercept') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">::1 example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#555; font-size:10px; min-width:42px;">{{ t('redirect') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">192.168.1.1 example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#555; font-size:10px; min-width:42px;">{{ t('wildcard') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">0.0.0.0 *.example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#ff6644; font-size:10px; min-width:42px;">{{ t('v6Wildcard') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;">::1 *.example.com</code>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; padding:3px 0; font-family:monospace; font-size:11px; line-height:1.7;">
+              <span style="color:#555; font-size:10px; min-width:42px;">{{ t('comment') }}</span>
+              <code style="color:#00ff88; opacity:0.7; background:rgba(0,255,136,0.03); padding:1px 6px; border-radius:4px; font-size:10px;"># {{ t('explanationText') }}</code>
+            </div>
+            <div style="color:#444; font-size:9px; margin-top:6px; opacity:0.5;">{{ t('formatDesc') }}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="generate-rules-btn" @click="generateRules">
+        <i class="ri-hammer-line" style="font-size:17px;"></i> {{ t('generateRulesBtn') }}
+      </button>
+      <div style="color:#555; font-size:11px; margin-bottom:8px; min-height:16px;" v-html="ruleCountInfoHtml"></div>
+
+      <div class="rule-preview-box" v-if="generatedTextDisplay">
+         <span style="color:#00ff88;" v-if="exportedToLabel">{{ exportedToLabel }}<br><br></span>
+         {{ generatedTextDisplay }}
+      </div>
+
+      <div class="export-row">
+        <button class="source-btn" style="background:rgba(0,255,136,0.04); border:1px solid rgba(0,255,136,0.15); color:#00ff88;" @click="copyRules">
+          <i class="ri-file-copy-line" style="font-size:15px;"></i> {{ t('copyAll') }}
+        </button>
+        <button class="source-btn" style="background:rgba(0,200,255,0.04); border:1px solid rgba(0,200,255,0.15); color:#00c8ff;" @click="exportRules">
+          <i class="ri-download-2-line" style="font-size:15px;"></i> {{ t('exportFile') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div class="app-footer">POWERED BY B6W.HOST</div>
+</div>
+
+<script>
+var APP_VERSION = '2.01';
+var UPDATE_CHECK_URL = 'https://sharechain.qq.com/75525b827f14baefaee0ab4ba2e7c4cf?qq_aio_chat_type=2';
+
+var I18N = {
+  zh: {
+    online:'在线运行', offline:'已离线', dnsBlock:'DNS 拦截',
+    systemRunning:'系统运行中 · 实时过滤', systemIdle:'系统待启动',
+    blocked:'拦截', filterRules:'过滤规则', uptime:'运行时长',
+    ipv4Block:'IPv4 拦截', ipv6Block:'IPv6 拦截',
+    load:'负载', clickStop:'点 击 停 止', clickStart:'点 击 启 动',
+    domainCapture:'域名捕获', stopCapture:'停止捕获', ruleGen:'规则生成器',
+    activityLog:'活动日志', waitingStart:'等待启动', since:'始于',
+    selectApp:'选择要捕获的应用', searchApp:'搜索应用名或包名...', noApps:'未找到应用', cancel:'取消',
+    prevRecordFound:'检测到上次记录', prevRecordDesc:'发现上次运行的拦截数据，是否继续累计？',
+    totalBlocked:'累计拦截', totalTime:'累计时长', continue:'继续运行', restart:'重新开始',
+    newVersion:'检测到新版本', updateContent:'更新内容', updateNow:'立即更新', later:'稍后再说',
+    ruleGeneratorTitle: '规则生成器', dataSource: '数据来源', importFromCapture: '从捕获导入',
+    selectFile: '选择文件', inputFilePath: '输入文件路径...', readBtn: '读取',
+    manualInput: '手动输入', pasteRules: '粘贴域名、hosts规则、任意文本...', smartParse: '智能解析',
+    ruleFormatTitle: '规则格式', hostPrefix: 'Host前缀', prefixStart: '开头', contentBeforeDomain: '域名前面的内容',
+    suffixEnd: '结尾', contentAfterDomain: '域名后面的内容', exampleStart: '示例: 开头', exampleEndEmpty: '结尾 空 =',
+    sysHostRules: '本系统Host规则', generateRulesBtn: '生成规则', copyAll: '复制全部', exportFile: '导出文件',
+    intercept: '拦截', v6Intercept: 'v6拦截', redirect: '跳转', wildcard: '通配', v6Wildcard: 'v6通配',
+    comment: '注释', explanationText: '说明文字', formatDesc: '格式: IP + 空格 + 域名（每行一条，支持 IPv4 / IPv6）',
+    sourceCaptured: '来源: 已捕获', sourceSelectedFile: '来源: 选择的文件', sourceFile: '来源: 文件', sourceManual: '来源: 手动输入',
+    itemsCount: '条', errorEmptyPath: '请输入文件路径', errorEmptyContent: '请先粘贴内容', errorNoData: '没有数据，请先导入',
+    generated: '已生成', rulesGenerated: '条规则', copiedToClipboard: '已复制到剪贴板', errorNotGenerated: '请先生成', exportedTo: '已导出:', openFileFailed: '打开文件选择器失败',
+    fmtAdguardIpLabel: 'AdGuard-IP', fmtAdguardDomainLabel: 'AdGuard-域名', fmtIptablesIpLabel: 'iptables-IP', fmtIptablesPortLabel: 'iptables-端口', fmtIptablesDomainLabel: 'iptables-域名', fmtHostLabel: 'Host', fmtCustomLabel: '自定义规则',
+    fmtAdguardIpDesc: '每条域名生成一条 AdGuard IP 级拦截规则', fmtAdguardDomainDesc: '每条域名生成一条 AdGuard 域名拦截规则', fmtIptablesIpDesc: '每条域名生成 iptables 入站 IP 封锁命令', fmtIptablesPortDesc: '按端口号生成 iptables 入站封锁命令', fmtIptablesDomainDesc: '通过字符串匹配封锁包含域名的流量', fmtHostDesc: '生成标准 hosts 格式，支持 IPv4 / IPv6', fmtCustomDesc: '自由组合开头 + 域名 + 结尾，灵活生成任意格式',
+    fmtAdguardIpTip: '适用于 AdGuard Home / AdGuard for Android', fmtAdguardDomainTip: '适用于 AdGuard 浏览器插件 / DNS', fmtIptablesIpTip: '需要 root 权限，配合 iptables 使用', fmtIptablesPortTip: '输入端口号（如 80, 443），非域名', fmtIptablesDomainTip: '适用于 OUTPUT 链，匹配明文域名', fmtHostTip: '可自定义 IP 前缀，默认 127.0.0.1', fmtCustomTip: '支持本系统 Host 规则参考', exampleOutput: '示例输出'
+  },
+  en: {
+    online:'ONLINE', offline:'OFFLINE', dnsBlock:'DNS Filter',
+    systemRunning:'Running · Real-time filtering', systemIdle:'System idle',
+    blocked:'Blocked', filterRules:'Filter Rules', uptime:'Uptime',
+    ipv4Block:'IPv4 Blocked', ipv6Block:'IPv6 Blocked',
+    load:'Load', clickStop:'C L I C K   S T O P', clickStart:'C L I C K   S T A R T',
+    domainCapture:'Capture', stopCapture:'Stop Capture', ruleGen:'Rule Generator',
+    activityLog:'Activity Log', waitingStart:'Waiting to start', since:'Since',
+    selectApp:'Select app to capture', searchApp:'Search app name or package...', noApps:'No apps found', cancel:'Cancel',
+    prevRecordFound:'Previous record found', prevRecordDesc:'Found data from last session. Continue accumulating?',
+    totalBlocked:'Total Blocked', totalTime:'Total Time', continue:'Continue', restart:'Start Fresh',
+    newVersion:'New version detected', updateContent:'Changes', updateNow:'Update Now', later:'Later',
+    ruleGeneratorTitle: 'Rule Generator', dataSource: 'Data Source', importFromCapture: 'Import from Capture',
+    selectFile: 'Select File', inputFilePath: 'Enter file path...', readBtn: 'Read',
+    manualInput: 'Manual Input', pasteRules: 'Paste domains, hosts, or text...', smartParse: 'Smart Parse',
+    ruleFormatTitle: 'Rule Format', hostPrefix: 'Host Prefix', prefixStart: 'Prefix', contentBeforeDomain: 'Content before domain',
+    suffixEnd: 'Suffix', contentAfterDomain: 'Content after domain', exampleStart: 'Example: Prefix', exampleEndEmpty: 'Suffix empty =',
+    sysHostRules: 'System Host Rules', generateRulesBtn: 'Generate Rules', copyAll: 'Copy All', exportFile: 'Export File',
+    intercept: 'Block', v6Intercept: 'v6 Block', redirect: 'Redirect', wildcard: 'Wildcard', v6Wildcard: 'v6 Wildcard',
+    comment: 'Comment', explanationText: 'Explanation text', formatDesc: 'Format: IP + Space + Domain (One per line, IPv4/IPv6)',
+    sourceCaptured: 'Source: Captured', sourceSelectedFile: 'Source: Selected File', sourceFile: 'Source: File', sourceManual: 'Source: Manual',
+    itemsCount: 'items', errorEmptyPath: 'Please enter a file path', errorEmptyContent: 'Please paste content first', errorNoData: 'No data, please import first',
+    generated: 'Generated', rulesGenerated: 'rules', copiedToClipboard: 'Copied to clipboard', errorNotGenerated: 'Generate rules first', exportedTo: 'Exported to: ', openFileFailed: 'Failed to open file picker',
+    fmtAdguardIpLabel: 'AdGuard-IP', fmtAdguardDomainLabel: 'AdGuard-Domain', fmtIptablesIpLabel: 'iptables-IP', fmtIptablesPortLabel: 'iptables-Port', fmtIptablesDomainLabel: 'iptables-Domain', fmtHostLabel: 'Host', fmtCustomLabel: 'Custom',
+    fmtAdguardIpDesc: 'Generates an AdGuard IP block rule per domain', fmtAdguardDomainDesc: 'Generates an AdGuard domain block rule', fmtIptablesIpDesc: 'Generates iptables inbound IP block command', fmtIptablesPortDesc: 'Generates iptables inbound block command by port', fmtIptablesDomainDesc: 'Blocks traffic containing domain via string matching', fmtHostDesc: 'Generates standard hosts format, supports IPv4/IPv6', fmtCustomDesc: 'Free combination of prefix + domain + suffix',
+    fmtAdguardIpTip: 'For AdGuard Home / Android', fmtAdguardDomainTip: 'For AdGuard browser extensions', fmtIptablesIpTip: 'Requires root, used with iptables', fmtIptablesPortTip: 'Enter port numbers (e.g. 80, 443)', fmtIptablesDomainTip: 'For OUTPUT chain, matches plain text domains', fmtHostTip: 'Customizable IP prefix, default 127.0.0.1', fmtCustomTip: 'Supports system host rule format syntax', exampleOutput: 'Example Output'
+  },
+  ru: {
+    online:'В СЕТИ', offline:'ОФЛАЙН', dnsBlock:'DNS Фильтр',
+    systemRunning:'Работает · Фильтрация в реальном времени', systemIdle:'Система ожидает',
+    blocked:'Заблок.', filterRules:'Правила', uptime:'Время работы',
+    ipv4Block:'IPv4 блок.', ipv6Block:'IPv6 блок.',
+    load:'Нагрузка', clickStop:'Н А Ж М И   С Т О П', clickStart:'Н А Ж М И   С Т А Р Т',
+    domainCapture:'Захват', stopCapture:'Стоп захват', ruleGen:'Генератор правил',
+    activityLog:'Журнал активности', waitingStart:'Ожидание запуска', since:'С',
+    selectApp:'Выберите приложение', searchApp:'Поиск по имени или пакету...', noApps:'Приложения не найдены', cancel:'Отмена',
+    prevRecordFound:'Найдена прошлая запись', prevRecordDesc:'Найдены данные прошлой сессии. Продолжить накопление?',
+    totalBlocked:'Всего заблок.', totalTime:'Общее время', continue:'Продолжить', restart:'Начать заново',
+    newVersion:'Обнаружена новая версия', updateContent:'Изменения', updateNow:'Обновить', later:'Позже',
+    ruleGeneratorTitle: 'Генератор правил', dataSource: 'Источник', importFromCapture: 'Мои перехваты',
+    selectFile: 'Выбрать файл', inputFilePath: 'Введите путь файла...', readBtn: 'Прочесть',
+    manualInput: 'Ввод вручную', pasteRules: 'Вставьте домены, hosts или текст...', smartParse: 'Умный парсинг',
+    ruleFormatTitle: 'Формат', hostPrefix: 'Префикс Host', prefixStart: 'Начало', contentBeforeDomain: 'Текст до домена',
+    suffixEnd: 'Конец', contentAfterDomain: 'Текст после домена', exampleStart: 'Пример: Начало', exampleEndEmpty: 'Конец пусто =',
+    sysHostRules: 'Системные правила', generateRulesBtn: 'Сгенерировать', copyAll: 'Скопировать все', exportFile: 'Экспорт. в файл',
+    intercept: 'Блок.', v6Intercept: 'v6 Блок.', redirect: 'Перенапр.', wildcard: 'Подмена', v6Wildcard: 'v6 Подмен.',
+    comment: 'Коммент', explanationText: 'Пояснение', formatDesc: 'Формат: IP + Пробел + Домен (по одному на строку, IPv4/IPv6)',
+    sourceCaptured: 'Источник: Захвачено', sourceSelectedFile: 'Источник: Выбр. файл', sourceFile: 'Источник: Файл', sourceManual: 'Источник: Вручную',
+    itemsCount: 'строк', errorEmptyPath: 'Укажите путь к файлу', errorEmptyContent: 'Сначала вставьте текст', errorNoData: 'Нет данных, импортируйте',
+    generated: 'Сгенерировано', rulesGenerated: 'правил', copiedToClipboard: 'Скопировано в буфер', errorNotGenerated: 'Сначала сгенерируйте правила', exportedTo: 'Экспортировано в: ', openFileFailed: 'Ошибка открытия файла',
+    fmtAdguardIpLabel: 'AdGuard-IP', fmtAdguardDomainLabel: 'AdGuard-Домен', fmtIptablesIpLabel: 'iptables-IP', fmtIptablesPortLabel: 'iptables-Порт', fmtIptablesDomainLabel: 'iptables-Домен', fmtHostLabel: 'Host', fmtCustomLabel: 'Свой формат',
+    fmtAdguardIpDesc: 'Генерирует правило IP-блокировки', fmtAdguardDomainDesc: 'Генерирует доменное правило', fmtIptablesIpDesc: 'Генерирует команду блокировки входящих IP', fmtIptablesPortDesc: 'Генерирует команду брандмауэра по порту', fmtIptablesDomainDesc: 'Блокирует трафик с доменом через строку', fmtHostDesc: 'Генерирует стандартный формат hosts', fmtCustomDesc: 'Свободная комбинация: префикс + домен + суффикс',
+    fmtAdguardIpTip: 'Для AdGuard Home / Android', fmtAdguardDomainTip: 'Для расширений AdGuard', fmtIptablesIpTip: 'Требует root, для iptables', fmtIptablesPortTip: 'Введите номера портов (напр., 80, 443)', fmtIptablesDomainTip: 'Для OUTPUT, совпадает с доменами', fmtHostTip: 'IP префикс, по умолчанию 127.0.0.1', fmtCustomTip: 'Поддерживает синтаксис системных правил', exampleOutput: 'Пример вывода'
+  }
+};
+
+var _a=Vue;var createApp=_a.createApp,ref=_a.ref,computed=_a.computed,onMounted=_a.onMounted;
+createApp({
+  setup:function(){
+    var running=ref(false),ruleCount=ref(0),blockedCount=ref(0),blockedV4=ref(0),blockedV6=ref(0),logs=ref([]),powerBtn=ref(null),startTime=ref(null),elapsed=ref(0),baseElapsed=ref(0),baseBlocked=ref(0),showModal=ref(false),savedBlocked=ref(0),savedElapsed=ref(0),guardSeconds=ref(0),guardFirstUse=ref(''),guardSaveCounter=0,tickTimer=null;
+    var showCapture=ref(false),captureKeyword=ref(''),allApps=ref([]),filteredApps=ref([]),isCapturing=ref(false);
+    var showUpdate=ref(false),updateInfo=ref({version:'',link:'',content:''});
+    var lang=ref(localStorage.getItem('ui_lang')||'zh');
+    function t(k){return(I18N[lang.value]||I18N.zh)[k]||k}
+    function setLang(l){lang.value=l;try{localStorage.setItem('ui_lang',l)}catch(e){}}
+
+    function pollCaptureState(){try{isCapturing.value=!!Android.isCapturing()}catch(e){}}setInterval(pollCaptureState,1000);
+    function handleCapture(){try{if(Android.isCapturing()){Android.stopCapture();isCapturing.value=false;addLog('已停止域名捕获')}else{openCaptureModal()}}catch(e){}}
+    function openCaptureModal(){showCapture.value=true;captureKeyword.value='';try{var j=Android.getInstalledApps();allApps.value=JSON.parse(j)}catch(e){allApps.value=[]}filteredApps.value=allApps.value}
+    function closeCaptureModal(){showCapture.value=false}
+    function filterApps(){var kw=captureKeyword.value.toLowerCase();if(!kw){filteredApps.value=allApps.value;return}filteredApps.value=allApps.value.filter(function(a){return a.name.toLowerCase().indexOf(kw)>=0||a.package.toLowerCase().indexOf(kw)>=0})}
+    function selectCapture(app){closeCaptureModal();try{Android.startCapture(app.package,app.name)}catch(e){}isCapturing.value=true;addLog('开始捕获 '+app.name)}
+
+    function saveState(){var d=JSON.stringify({blocked:blockedCount.value,elapsed:elapsed.value,time:new Date().toISOString()});try{Android.saveState(d)}catch(e){try{localStorage.setItem('dns_state',d)}catch(e2){}}}
+    function loadState(){var r=null;try{r=Android.loadState()}catch(e){try{r=localStorage.getItem('dns_state')}catch(e2){}}if(!r)return false;try{var d=JSON.parse(r);if(d.blocked>0||d.elapsed>0){savedBlocked.value=d.blocked;savedElapsed.value=d.elapsed;return true}}catch(e){}return false}
+    function clearState(){try{Android.clearState()}catch(e){}try{localStorage.removeItem('dns_state')}catch(e2){}}
+    function saveGuard(){var d=JSON.stringify({seconds:guardSeconds.value,firstUse:guardFirstUse.value});try{Android.saveGuard(d)}catch(e){try{localStorage.setItem('dns_guard',d)}catch(e2){}}}
+    function loadGuard(){var r=null;try{r=Android.loadGuard()}catch(e){try{r=localStorage.getItem('dns_guard')}catch(e2){}}if(!r)return;try{var d=JSON.parse(r);if(d.seconds>0)guardSeconds.value=d.seconds;if(d.firstUse)guardFirstUse.value=d.firstUse}catch(e){}}
+
+    function startTick(){startTime.value=Date.now();tickTimer=setInterval(function(){elapsed.value=baseElapsed.value+Math.floor((Date.now()-startTime.value)/1000);guardSeconds.value++;guardSaveCounter++;if(guardSaveCounter>=10){saveGuard();guardSaveCounter=0}saveState()},1000)}
+
+    function checkUpdate(){
+      fetch(UPDATE_CHECK_URL).then(function(r){
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.text();
+      }).then(function(html){
+        var tmp=document.createElement('div');
+        tmp.innerHTML=html;
+        var text=tmp.textContent||tmp.innerText||'';
+        var lines=text.split(/[\r\n]+/);
+        var remoteVer='',updateLink='',updateContent='';
+
+        for(var i=0;i<lines.length;i++){
+          var line=lines[i].trim();
+          if(!line) continue;
+          if(/最新版本/.test(line)){var m=line.match(/[\d.]+/);if(m)remoteVer=m[0];}
+          if(/更新链接/.test(line)){var m=line.match(/https?:\/\/[^\s\u4e00-\u9fff]+/);if(m)updateLink=m[0].replace(/\/+$/,'');}
+          if(/更新内容/.test(line)){
+            var idx=line.indexOf('更新内容');
+            var after=line.substring(idx+4).replace(/^[：:]\s*/,'').replace(/\s*document\..*$/,'').replace(/\s*window\..*$/,'').replace(/\s*<script.*$/,'').trim();
+            if(after) updateContent=after;
+          }
+        }
+        if(!remoteVer||remoteVer===APP_VERSION) return;
+        if(!updateContent) updateContent='新版本 '+remoteVer+' 已发布';
+        updateInfo.value={version:remoteVer,link:updateLink,content:updateContent};
+        showUpdate.value=true;
+      }).catch(function(){});
+    }
+
+    function openUpdateLink(){if(updateInfo.value.link) window.open(updateInfo.value.link,'_blank'); showUpdate.value=false;}
+
+    var guardDisplay=computed(function(){var s=guardSeconds.value;if(s<=0)return'<span class="g-num">0</span><span class="g-unit">秒</span>';var y=Math.floor(s/31536000),d=Math.floor((s%31536000)/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sec=s%60;var p=[];if(y>0)p.push('<span class="g-num">'+y+'</span><span class="g-unit">年</span>');if(d>0||y>0)p.push('<span class="g-num">'+d+'</span><span class="g-unit">天</span>');if(h>0||d>0)p.push('<span class="g-num">'+h+'</span><span class="g-unit">时</span>');if(m>0||h>0)p.push('<span class="g-num">'+m+'</span><span class="g-unit">分</span>');p.push('<span class="g-num">'+sec+'</span><span class="g-unit">秒</span>');return p.join('')});
+    var guardSince=computed(function(){if(!guardFirstUse.value)return'';try{var d=new Date(guardFirstUse.value);return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')}catch(e){return guardFirstUse.value}});
+    function formatSavedTime(s){var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h>0)return h+'时'+m+'分'+sec+'秒';if(m>0)return m+'分'+sec+'秒';return sec+'秒'}
+    var uptime=computed(function(){if(!running.value&&elapsed.value===0)return'00:00';var s=elapsed.value,h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')});
+    var progressPct=computed(function(){if(!running.value)return 0;return Math.min(Math.floor(blockedCount.value/10),100)});
+    function formatNum(n){if(n>=10000)return(n/10000).toFixed(1)+'万';return n.toLocaleString()}
+    function nowTime(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0')}
+    function addLog(m){logs.value.unshift({time:nowTime(),msg:m});if(logs.value.length>50)logs.value.pop()}
+    function ripple(){if(powerBtn.value){var r=document.createElement('div');r.className='ripple';r.style.width=r.style.height='40px';r.style.left='35px';r.style.top='35px';powerBtn.value.appendChild(r);setTimeout(function(){r.remove()},600)}}
+
+    function toggle(){if(running.value){running.value=false;try{Android.toggleVpn(false)}catch(e){}clearInterval(tickTimer);tickTimer=null;saveState();saveGuard();addLog('过滤引擎已停止');ripple()}else{if(loadState()){showModal.value=true}else{doStart();addLog('过滤引擎启动')}}}
+    function doStart(){running.value=true;try{Android.toggleVpn(true)}catch(e){}if(!guardFirstUse.value){guardFirstUse.value=new Date().toISOString();saveGuard()}guardSaveCounter=0;startTick();ripple()}
+    function resume(){showModal.value=false;baseElapsed.value=savedElapsed.value;baseBlocked.value=savedBlocked.value;blockedCount.value=savedBlocked.value;elapsed.value=savedElapsed.value;doStart();addLog('恢复运行 · 累计拦截 '+blockedCount.value.toLocaleString())}
+    function fresh(){showModal.value=false;baseElapsed.value=0;baseBlocked.value=0;blockedCount.value=0;elapsed.value=0;clearState();try{Android.resetBlockedCount()}catch(e){}doStart();addLog('过滤引擎启动 · 全新开始')}
+
+    // Rule Gen State
+    var showRuleGen = ref(false), showSysRules = ref(false);
+    var ruleData = ref([]), ruleFormat = ref('host'), ruleHostPrefix = ref('127.0.0.1');
+    var ruleCustomHead = ref(''), ruleCustomTail = ref(''), ruleFilePath = ref(''), ruleManualInput = ref('');
+    var generatedText = ref(''), ruleSourceInfoHtml = ref(''), ruleCountInfoHtml = ref(''), exportedToLabel = ref('');
+    var generatedTextDisplay = ref('');
+
+    var availableFmts = [
+      { key:'adguard_ip', labelKey:'fmtAdguardIpLabel', icon:'ri-shield-check-line' },
+      { key:'adguard_domain', labelKey:'fmtAdguardDomainLabel', icon:'ri-global-line' },
+      { key:'iptables_ip', labelKey:'fmtIptablesIpLabel', icon:'ri-fire-line' },
+      { key:'iptables_port', labelKey:'fmtIptablesPortLabel', icon:'ri-door-open-line' },
+      { key:'iptables_domain', labelKey:'fmtIptablesDomainLabel', icon:'ri-link' },
+      { key:'host', labelKey:'fmtHostLabel', icon:'ri-server-line' },
+      { key:'custom', labelKey:'fmtCustomLabel', icon:'ri-code-s-slash-line' }
+    ];
+
+    var formatDetailsMap = {
+      adguard_ip: { titleKey:'fmtAdguardIpLabel', icon:'ri-shield-check-line', descKey:'fmtAdguardIpDesc', example:'*:example.com$network', tipKey:'fmtAdguardIpTip', hasHost:false, hasCustom:false },
+      adguard_domain: { titleKey:'fmtAdguardDomainLabel', icon:'ri-global-line', descKey:'fmtAdguardDomainDesc', example:'||example.com^', tipKey:'fmtAdguardDomainTip', hasHost:false, hasCustom:false },
+      iptables_ip: { titleKey:'fmtIptablesIpLabel', icon:'ri-fire-line', descKey:'fmtIptablesIpDesc', example:'iptables -I INPUT -s example.com -j DROP', tipKey:'fmtIptablesIpTip', hasHost:false, hasCustom:false },
+      iptables_port: { titleKey:'fmtIptablesPortLabel', icon:'ri-door-open-line', descKey:'fmtIptablesPortDesc', example:'iptables -A INPUT -p tcp --dport example.com -j DROP', tipKey:'fmtIptablesPortTip', hasHost:false, hasCustom:false },
+      iptables_domain: { titleKey:'fmtIptablesDomainLabel', icon:'ri-link', descKey:'fmtIptablesDomainDesc', example:'iptables -A OUTPUT -m string --string "example.com" --algo bm --to 65535 -j DROP', tipKey:'fmtIptablesDomainTip', hasHost:false, hasCustom:false },
+      host: { titleKey:'fmtHostLabel', icon:'ri-server-line', descKey:'fmtHostDesc', example:'127.0.0.1 example.com\n::1 example.com', tipKey:'fmtHostTip', hasHost:true, hasCustom:false },
+      custom: { titleKey:'fmtCustomLabel', icon:'ri-code-s-slash-line', descKey:'fmtCustomDesc', example:'0.0.0.0 example.com', tipKey:'fmtCustomTip', hasHost:false, hasCustom:true }
+    };
+    
+    var currentFmtDef = computed(function(){return availableFmts.find(function(f){return f.key===ruleFormat.value})});
+    var currentFmtDesc = computed(function(){return formatDetailsMap[ruleFormat.value]});
+
+    function selectFmt(f){ ruleFormat.value=f; }
+
+    function updateSourceInfo(sourceKey){
+      ruleSourceInfoHtml.value='<i class="ri-check-double-line" style="color:#00ff88;margin-right:4px;"></i>'+t(sourceKey)+' ('+ruleData.value.length+' '+t('itemsCount')+')';
+    }
+
+    function loadFromCapture(){ try{ruleData.value=JSON.parse(Android.getCapturedDomains())}catch(e){ruleData.value=[]} updateSourceInfo('sourceCaptured'); }
+    function pickFile(){ try{Android.openFilePicker()}catch(e){alert(t('openFileFailed'))} }
+    window.onFileLoaded = function(){ try{ruleData.value=JSON.parse(Android.getPickedFileDomains())}catch(e){ruleData.value=[]} updateSourceInfo('sourceSelectedFile'); }
+    function loadFromPath(){ var path=ruleFilePath.value.trim();if(!path){alert(t('errorEmptyPath'));return}try{ruleData.value=JSON.parse(Android.readFileDomains(path))}catch(e){ruleData.value=[]} updateSourceInfo('sourceFile'); }
+    function parseManualInput(){ var txt=ruleManualInput.value;if(!txt.trim()){alert(t('errorEmptyContent'));return}try{ruleData.value=JSON.parse(Android.parseTextDomains(txt))}catch(e){ruleData.value=[]} updateSourceInfo('sourceManual'); }
+
+    function applyTemplate(item){
+      switch(ruleFormat.value){
+        case'adguard_ip':return'*:'+item+'$network';
+        case'adguard_domain':return'||'+item+'^';
+        case'iptables_ip':return'iptables -I INPUT -s '+item+' -j DROP';
+        case'iptables_port':return'iptables -A INPUT -p tcp --dport '+item+' -j DROP';
+        case'iptables_domain':return'iptables -A OUTPUT -m string --string "'+item+'" --algo bm --to 65535 -j DROP';
+        case'host':return(ruleHostPrefix.value||'127.0.0.1')+' '+item;
+        case'custom':return(ruleCustomHead.value||'')+item+(ruleCustomTail.value||'');
+        default:return item;
+      }
+    }
+
+    function generateRules(){
+      if(!ruleData.value.length){alert(t('errorNoData'));return}
+      var lines=[];for(var i=0;i<ruleData.value.length;i++)lines.push(applyTemplate(ruleData.value[i]));
+      generatedText.value=lines.join('\n');
+      var show=lines.slice(0,500);
+      generatedTextDisplay.value=show.join('\n')+(lines.length>500?'\n\n... + '+(lines.length-500)+' ...':'');
+      exportedToLabel.value='';
+      ruleCountInfoHtml.value='<i class="ri-checkbox-circle-fill" style="color:#00ff88;margin-right:4px;"></i>'+t('generated')+' '+ruleData.value.length+' '+t('rulesGenerated');
+    }
+
+    function copyRules(){
+      if(!generatedText.value){alert(t('errorNotGenerated'));return;}
+      try{Android.copyToClipboard(generatedText.value)}catch(e){}
+      ruleCountInfoHtml.value='<i class="ri-clipboard-line" style="color:#00ff88;margin-right:4px;"></i>'+t('copiedToClipboard');
+    }
+
+    function exportRules(){
+      if(!generatedText.value){alert(t('errorNotGenerated'));return;}
+      try{
+        var path=Android.exportRuleFile(generatedText.value, ruleFormat.value);
+        if(path){exportedToLabel.value=t('exportedTo')+' '+path;}
+      }catch(e){}
+    }
+
+    onMounted(function(){
+      try{ruleCount.value=Android.getTotalRules()}catch(e){}
+      loadGuard(); loadState();
+      setTimeout(checkUpdate,2000);
+    });
+
+    window.updateStatus=function(isRunning,total,v4,v6){running.value=isRunning;blockedCount.value=(baseBlocked.value||0)+(total||0);blockedV4.value=v4||0;blockedV6.value=v6||0;try{ruleCount.value=Android.getTotalRules()}catch(e){}if(isRunning&&!tickTimer){if(!guardFirstUse.value){guardFirstUse.value=new Date().toISOString();saveGuard()}guardSaveCounter=0;startTick()}if(!isRunning){clearInterval(tickTimer);tickTimer=null;saveState();saveGuard()}};
+    window.addBlockLog=function(domain){blockedCount.value++;addLog('拦截 '+domain)};
+
+    return{
+      running:running,ruleCount:ruleCount,blockedCount:blockedCount,blockedV4:blockedV4,blockedV6:blockedV6,
+      logs:logs,uptime:uptime,progressPct:progressPct,
+      formatNum:formatNum,toggle:toggle,powerBtn:powerBtn,
+      showModal:showModal,savedBlocked:savedBlocked,savedElapsed:savedElapsed,
+      formatSavedTime:formatSavedTime,resume:resume,fresh:fresh,
+      guardDisplay:guardDisplay,guardSince:guardSince,
+      showCapture:showCapture,captureKeyword:captureKeyword,filteredApps:filteredApps,isCapturing:isCapturing,
+      handleCapture:handleCapture,openCaptureModal:openCaptureModal,closeCaptureModal:closeCaptureModal,filterApps:filterApps,selectCapture:selectCapture,
+      showUpdate:showUpdate,updateInfo:updateInfo,openUpdateLink:openUpdateLink,
+      lang:lang,t:t,setLang:setLang,
+      // Rule Gen exports
+      showRuleGen:showRuleGen, showSysRules:showSysRules, ruleData:ruleData, ruleFormat:ruleFormat,
+      ruleHostPrefix:ruleHostPrefix, ruleCustomHead:ruleCustomHead, ruleCustomTail:ruleCustomTail,
+      ruleFilePath:ruleFilePath, ruleManualInput:ruleManualInput, ruleSourceInfoHtml:ruleSourceInfoHtml,
+      ruleCountInfoHtml:ruleCountInfoHtml, exportedToLabel:exportedToLabel, generatedTextDisplay:generatedTextDisplay,
+      availableFmts:availableFmts, currentFmtDef:currentFmtDef, currentFmtDesc:currentFmtDesc, selectFmt:selectFmt,
+      loadFromCapture:loadFromCapture, pickFile:pickFile, loadFromPath:loadFromPath, parseManualInput:parseManualInput,
+      generateRules:generateRules, copyRules:copyRules, exportRules:exportRules
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
